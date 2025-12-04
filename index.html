@@ -1,65 +1,570 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>小學生英文拼字練習</title>
-
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>單字拼字練習（兒童版）</title>
 <style>
-    body {
-        font-family: "Segoe UI", Arial, sans-serif;
-        background: #f0f7ff;
-        margin: 0;
-        padding: 20px;
-    }
+  :root{
+    --bg:#f0f9ff; --card:#ffffff; --primary:#1c7ed6; --accent:#40c057; --muted:#6c757d;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family: "Segoe UI", Roboto, "Noto Sans TC", Arial, sans-serif;background:linear-gradient(135deg,#e6f7ff 0%,#fbfcff 100%);color:#122;padding:20px}
+  .wrap{max-width:980px;margin:10px auto;background:var(--card);border-radius:18px;padding:20px 22px;box-shadow:0 12px 30px rgba(8,40,80,0.06)}
+  header{text-align:center;padding-bottom:10px;border-bottom:3px dashed rgba(28,126,214,0.12)}
+  h1{color:var(--primary);margin:6px 0;font-size:2rem}
+  p.lead{margin:0;color:var(--muted)}
+  .game{display:flex;gap:18px;flex-wrap:wrap;margin-top:16px}
+  .left{flex:1 1 600px;min-width:320px}
+  .right{width:320px;min-width:260px}
+  .card{background:#fbfeff;border-radius:14px;padding:14px;border:3px solid rgba(160,200,255,0.2);box-shadow:0 8px 18px rgba(10,30,80,0.03);margin-bottom:14px}
+  .chinese{font-size:2.4rem;color:#0b66b2;font-weight:900;text-align:center;padding:10px 6px}
+  .pic{display:flex;justify-content:center;align-items:center;margin-bottom:10px}
+  .pic .emoji{font-size:86px;filter:drop-shadow(0 6px 12px rgba(0,0,0,0.06));}
+  .slots{display:flex;justify-content:center;gap:10px;margin:10px 0;flex-wrap:wrap}
+  .slot{width:46px;height:52px;border-radius:10px;background:#edf7ff;border:3px solid rgba(167,204,249,0.7);display:flex;align-items:center;justify-content:center;font-weight:900;color:#0b66b2;font-size:1.4rem}
+  .inputRow{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:8px}
+  .hiddenInput{position:absolute;left:-9999px;top:-9999px}
+  .letterPanel{margin-top:14px;display:grid;grid-template-columns:repeat(9,1fr);gap:8px}
+  @media(max-width:900px){.letterPanel{grid-template-columns:repeat(7,1fr)}}
+  @media(max-width:520px){.letterPanel{grid-template-columns:repeat(6,1fr)}}
+  .letterBtn{background:linear-gradient(180deg,#4dabf7,#2788e8);color:white;border-radius:10px;padding:10px;font-weight:900;text-align:center;cursor:pointer;user-select:none;box-shadow:0 8px 14px rgba(8,30,60,0.08);font-size:1.1rem}
+  .letterBtn:active{transform:translateY(2px) scale(.99)}
+  .letterBtn.disabled{opacity:.45;pointer-events:none}
+  .controls{display:flex;gap:10px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+  button.btn{border:none;padding:12px 14px;border-radius:12px;font-weight:900;cursor:pointer;font-size:1rem;color:white}
+  .btn-submit{background:var(--primary)}
+  .btn-next{background:var(--accent)}
+  .btn-next.disabled{background:#a6e6b5;opacity:.6;cursor:not-allowed}
+  .btn-clear{background:#ff922b}
+  .feedback{margin-top:12px;padding:12px;border-radius:10px;font-weight:900;text-align:center;min-height:46px}
+  .correct{background:#d3f9d8;color:#2b8a3e;border:3px solid #69db7c}
+  .incorrect{background:#ffe3e3;color:#c92a2a;border:3px solid #ff8787}
+  .stat{display:flex;gap:8px;justify-content:space-between;align-items:center;padding:8px}
+  .stat .num{font-size:1.6rem;font-weight:900;color:#2b8aef}
+  footer{text-align:center;padding-top:12px;color:var(--muted)}
+  .hint{color:#5b6b83;font-weight:700;text-align:center;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap" role="application" aria-label="兒童單字拼字練習">
+  <header>
+    <h1>趣味單字拼字練習（小學生）</h1>
+    <p class="lead">點字母或用鍵盤輸入（A–Z），填滿格子後按「提交」看答案。答對播放叮咚，答錯播放鄧鄧。</p>
+  </header>
 
-    .container {
-        max-width: 800px;
-        margin: auto;
-        background: white;
-        border-radius: 20px;
-        padding: 30px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    }
+  <main class="game">
+    <section class="left">
+      <div class="card" aria-live="polite">
+        <div class="chinese" id="chineseWord">按「下一題」開始</div>
 
-    h1 {
-        text-align: center;
-        color: #1c7ed6;
-        margin-bottom: 10px;
-    }
+        <div class="pic"><div class="emoji" id="emojiPic" aria-hidden="true">🧸</div></div>
 
-    .word-box {
-        background: #e7f5ff;
-        border: 3px solid #a5d8ff;
-        padding: 20px;
-        border-radius: 15px;
-        text-align: center;
-        font-size: 2.5rem;
-        font-weight: bold;
-        margin-bottom: 20px;
-        color: #1864ab;
-    }
+        <div class="slots" id="slotsArea" aria-hidden="false"></div>
 
-    input.answer {
-        width: 100%;
-        padding: 15px;
-        font-size: 1.6rem;
-        border: 3px solid #4dabf7;
-        border-radius: 10px;
-        text-align: center;
-        background: #f0f9ff;
-        color: #1864ab;
-        font-weight: bold;
-    }
+        <div class="inputRow">
+          <!-- hidden input to capture keyboard focus -->
+          <input id="hiddenInput" class="hiddenInput" autocomplete="off" inputmode="text" />
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-clear" id="btnClear" title="刪除最後一個字">刪除</button>
+          </div>
+        </div>
 
-    .buttons {
-        margin-top: 20px;
-        display: flex;
-        gap: 10px;
-    }
+        <div class="letterPanel" id="letters"></div>
 
-    button {
-        flex: 1;
+        <div class="controls">
+          <button class="btn btn-submit" id="btnSubmit">提交答案</button>
+          <button class="btn btn-next disabled" id="btnNext">下一題</button>
+        </div>
+
+        <div id="feedback" class="feedback" aria-live="assertive">準備好了：按「下一題」開始</div>
+        <div class="hint">提示：按字母或直接用鍵盤 A–Z；按 Backspace 刪除一個字母。</div>
+      </div>
+    </section>
+
+    <aside class="right">
+      <div class="card">
+        <div class="stat"><div>得分</div><div class="num" id="score">0</div></div>
+        <div class="stat"><div>已答題</div><div class="num" id="answered">0</div></div>
+        <div style="margin-top:8px">
+          <div style="font-weight:900;color:#0b66b2">進度</div>
+          <div style="height:12px;background:#eef6ff;border-radius:8px;margin-top:6px;overflow:hidden;border:3px solid rgba(99,230,203,0.12)">
+            <div id="progressBar" style="height:100%;width:0%;background:linear-gradient(90deg,#20c997,#63e6be);transition:width .5s"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="max-height:360px;overflow:auto">
+        <div style="font-weight:900;color:#0b66b2;margin-bottom:8px">題庫範例（中文 — 英）</div>
+        <div id="sampleList" style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px"></div>
+        <div style="font-size:.9rem;color:var(--muted);margin-top:8px">共 180 題（80% 基礎 + 20% 進階）</div>
+      </div>
+    </aside>
+  </main>
+
+  <footer><small>設計給小學生：大按鈕、簡單流程、卡通圖示。</small></footer>
+</div>
+
+<script>
+/* ======= 題庫（180 題） ======= */
+/* （保持你先前的題庫 — 可自行調整） */
+const WORDS = [
+  {c:'蘋果',e:'apple'},{c:'香蕉',e:'banana'},{c:'橘子',e:'orange'},{c:'葡萄',e:'grape'},
+  {c:'西瓜',e:'watermelon'},{c:'梨',e:'pear'},{c:'桃子',e:'peach'},{c:'李子',e:'plum'},
+  {c:'芒果',e:'mango'},{c:'草莓',e:'strawberry'},{c:'櫻桃',e:'cherry'},{c:'檸檬',e:'lemon'},
+  {c:'胡蘿蔔',e:'carrot'},{c:'馬鈴薯',e:'potato'},{c:'番茄',e:'tomato'},{c:'小黃瓜',e:'cucumber'},
+  {c:'麵包',e:'bread'},{c:'牛奶',e:'milk'},{c:'雞蛋',e:'egg'},{c:'起司',e:'cheese'},
+  {c:'奶油',e:'butter'},{c:'白飯',e:'rice'},{c:'麵條',e:'noodle'},{c:'蛋糕',e:'cake'},
+  {c:'湯',e:'soup'},{c:'糖',e:'sugar'},{c:'鹽',e:'salt'},{c:'雞肉',e:'chicken'},
+  {c:'豬肉',e:'pork'},{c:'牛肉',e:'beef'},{c:'魚',e:'fish'},{c:'蝦',e:'shrimp'},
+  {c:'蟹',e:'crab'},{c:'章魚',e:'octopus'},{c:'玉米',e:'corn'},{c:'蘑菇',e:'mushroom'},
+  {c:'洋蔥',e:'onion'},{c:'大蒜',e:'garlic'},{c:'茶',e:'tea'},{c:'果汁',e:'juice'},
+  {c:'水',e:'water'},{c:'學校',e:'school'},{c:'老師',e:'teacher'},{c:'學生',e:'student'},
+  {c:'班級',e:'class'},{c:'書桌',e:'desk'},{c:'椅子',e:'chair'},{c:'書',e:'book'},
+  {c:'原子筆',e:'pen'},{c:'鉛筆',e:'pencil'},{c:'橡皮擦',e:'eraser'},{c:'尺',e:'ruler'},
+  {c:'書包',e:'bag'},{c:'制服',e:'uniform'},{c:'遊樂場',e:'playground'},{c:'圖書館',e:'library'},
+  {c:'電腦',e:'computer'},{c:'電話',e:'phone'},{c:'時鐘',e:'clock'},{c:'手錶',e:'watch'},
+  {c:'門',e:'door'},{c:'窗戶',e:'window'},{c:'屋頂',e:'roof'},{c:'地板',e:'floor'},
+  {c:'牆',e:'wall'},{c:'廚房',e:'kitchen'},{c:'臥室',e:'bedroom'},{c:'浴室',e:'bathroom'},
+  {c:'桌子',e:'table'},{c:'燈',e:'lamp'},{c:'床',e:'bed'},{c:'沙發',e:'sofa'},
+  {c:'地毯',e:'carpet'},{c:'花園',e:'garden'},{c:'樹',e:'tree'},{c:'花',e:'flower'},
+  {c:'草',e:'grass'},{c:'葉子',e:'leaf'},{c:'太陽',e:'sun'},{c:'月亮',e:'moon'},
+  {c:'星星',e:'star'},{c:'雲',e:'cloud'},{c:'雨',e:'rain'},{c:'雪',e:'snow'},
+  {c:'風',e:'wind'},{c:'颱風',e:'storm'},{c:'河',e:'river'},{c:'湖',e:'lake'},
+  {c:'海',e:'sea'},{c:'山',e:'mountain'},{c:'小山',e:'hill'},{c:'森林',e:'forest'},
+  {c:'島',e:'island'},{c:'城市',e:'city'},{c:'鄉村',e:'village'},{c:'國家',e:'country'},
+  {c:'街道',e:'street'},{c:'道路',e:'road'},{c:'汽車',e:'car'},{c:'公車',e:'bus'},
+  {c:'腳踏車',e:'bike'},{c:'火車',e:'train'},{c:'飛機',e:'plane'},{c:'船',e:'ship'},
+  {c:'小船',e:'boat'},{c:'貨車',e:'truck'},{c:'計程車',e:'taxi'},{c:'交通',e:'traffic'},
+  {c:'商店',e:'shop'},{c:'市場',e:'market'},{c:'醫院',e:'hospital'},{c:'醫生',e:'doctor'},
+  {c:'護士',e:'nurse'},{c:'警察',e:'police'},{c:'消防員',e:'fireman'},{c:'農夫',e:'farmer'},
+  {c:'廚師',e:'cook'},{c:'歌手',e:'singer'},{c:'舞者',e:'dancer'},{c:'畫家',e:'artist'},
+  {c:'朋友',e:'friend'},{c:'家庭',e:'family'},{c:'媽媽',e:'mother'},{c:'爸爸',e:'father'},
+  {c:'哥哥',e:'brother'},{c:'姊姊',e:'sister'},{c:'嬰兒',e:'baby'},{c:'小孩',e:'child'},
+  {c:'男人',e:'man'},{c:'女人',e:'woman'},{c:'人們',e:'people'},{c:'微笑',e:'smile'},
+  {c:'笑',e:'laugh'},{c:'哭',e:'cry'},{c:'快樂',e:'happy'},{c:'難過',e:'sad'},
+  {c:'生氣',e:'angry'},{c:'疲倦',e:'tired'},{c:'飢餓',e:'hungry'},{c:'口渴',e:'thirsty'},
+  {c:'乾淨',e:'clean'},{c:'髒',e:'dirty'},{c:'打開',e:'open'},{c:'關閉',e:'close'},
+  {c:'熱',e:'hot'},{c:'冷',e:'cold'},{c:'大',e:'big'},{c:'小',e:'small'},
+  {c:'長',e:'long'},{c:'短',e:'short'},{c:'快',e:'fast'},{c:'慢',e:'slow'},
+  {c:'新',e:'new'},{c:'舊',e:'old'},{c:'年輕',e:'young'},{c:'微小',e:'tiny'},
+  {c:'巨大',e:'huge'},{c:'重',e:'heavy'},{c:'輕',e:'light'},{c:'強壯',e:'strong'},
+  {c:'虛弱',e:'weak'},{c:'硬',e:'hard'},{c:'軟',e:'soft'},{c:'簡單',e:'easy'},
+  {c:'困難',e:'difficult'},{c:'今天',e:'today'},{c:'明天',e:'tomorrow'},{c:'昨天',e:'yesterday'},
+  {c:'早上',e:'morning'},{c:'下午',e:'afternoon'},{c:'晚上',e:'evening'},{c:'夜晚',e:'night'},
+  {c:'早餐',e:'breakfast'},{c:'午餐',e:'lunch'},{c:'晚餐',e:'dinner'},{c:'三明治',e:'sandwich'},
+  {c:'披薩',e:'pizza'},{c:'餅乾',e:'cookie'},{c:'博物館',e:'museum'},{c:'森林',e:'forest'},
+  {c:'象',e:'elephant'},{c:'動物',e:'animal'},{c:'圖書館',e:'library'},{c:'醫院',e:'hospital'}
+];
+/* ======= 結束題庫 ======= */
+
+/* emojiMap（同前） */
+const emojiMap = {
+  apple:'🍎',banana:'🍌',orange:'🍊',grape:'🍇',watermelon:'🍉',pear:'🍐',peach:'🍑',plum:'🍑',
+  mango:'🥭',strawberry:'🍓',cherry:'🍒',lemon:'🍋',carrot:'🥕',potato:'🥔',tomato:'🍅',cucumber:'🥒',
+  bread:'🍞',milk:'🥛',egg:'🥚',cheese:'🧀',butter:'🧈',rice:'🍚',noodle:'🍜',cake:'🍰',
+  soup:'🍲',sugar:'🍬',salt:'🧂',chicken:'🍗',pork:'🍖',beef:'🥩',fish:'🐟',shrimp:'🦐',
+  crab:'🦀',octopus:'🐙',corn:'🌽',mushroom:'🍄',onion:'🧅',garlic:'🧄',tea:'🍵',juice:'🧃',
+  water:'💧',school:'🏫',teacher:'🧑‍🏫',student:'🧑‍🎓',class:'🏫',desk:'🪑',chair:'🪑',book:'📘',
+  pen:'🖊️',pencil:'✏️',eraser:'🧽',ruler:'📏',bag:'🎒',uniform:'👔',playground:'🛝',library:'🏛️',
+  computer:'💻',phone:'📱',clock:'🕒',watch:'⌚',door:'🚪',window:'🪟',roof:'🏠',floor:'🧱',
+  kitchen:'🍽️',bedroom:'🛏️',bathroom:'🛁',table:'🪑',lamp:'💡',bed:'🛏️',sofa:'🛋️',garden:'🌳',
+  tree:'🌲',flower:'🌸',grass:'🌿',leaf:'🍃',sun:'☀️',moon:'🌙',star:'⭐',cloud:'☁️',
+  rain:'🌧️',snow:'❄️',wind:'💨',storm:'🌩️',river:'🏞️',lake:'🏞️',sea:'🌊',mountain:'⛰️',
+  forest:'🌲',island:'🏝️',city:'🏙️',village:'🏡',country:'🌍',street:'🛣️',road:'🛣️',car:'🚗',
+  bus:'🚌',bike:'🚲',train:'🚆',plane:'✈️',ship:'🚢',boat:'🛥️',truck:'🚚',taxi:'🚕',
+  shop:'🏬',market:'🛒',hospital:'🏥',doctor:'🩺',nurse:'🩺',police:'👮',fireman:'👩‍🚒',farmer:'👨‍🌾',
+  cook:'👩‍🍳',singer:'🎤',dancer:'💃',artist:'🎨',friend:'🧑‍🤝‍🧑',family:'👪',mother:'👩‍👧',father:'👨‍👧',
+  brother:'👦',sister:'👧',baby:'👶',child:'🧒',man:'👨',woman:'👩',people:'🧑‍🤝‍🧑',smile:'😊',
+  laugh:'😄',cry:'😢',happy:'😃',sad:'😔',angry:'😠',tired:'😪',hungry:'😋',thirsty:'🥤',
+  clean:'🧼',dirty:'🗑️',open:'🔓',close:'🔒',hot:'🔥',cold:'🧊',big:'🟦',small:'🟩',
+  long:'📏',short:'🔽',fast:'⚡',slow:'🐢',new:'🆕',old:'🕰️',young:'🧒',tiny:'🔹',
+  huge:'🗻',heavy:'🏋️',light:'💡',strong:'💪',weak:'😵',hard:'🪨',soft:'🧸',easy:'✅',
+  difficult:'❌',today:'📅',tomorrow:'📆',yesterday:'📅',morning:'🌅',afternoon:'🌇',evening:'🌆',night:'🌃',
+  breakfast:'🥞',lunch:'🍱',dinner:'🍽️',sandwich:'🥪',pizza:'🍕',cookie:'🍪',museum:'🏛️',elephant:'🐘',
+  animal:'🐾',library:'📚'
+};
+
+/* ====== 遊戲狀態 ====== */
+let usedIndices = new Set();
+let currentIndex = null;
+let slots = []; // DOM slots
+let filledCount = 0;
+let score = 0;
+let answered = 0;
+
+/* DOM references */
+const chineseWord = document.getElementById('chineseWord');
+const emojiPic = document.getElementById('emojiPic');
+const slotsArea = document.getElementById('slotsArea');
+const lettersPanel = document.getElementById('letters');
+const btnSubmit = document.getElementById('btnSubmit');
+const btnNext = document.getElementById('btnNext');
+const btnClear = document.getElementById('btnClear');
+const feedback = document.getElementById('feedback');
+const scoreEl = document.getElementById('score');
+const answeredEl = document.getElementById('answered');
+const progressBar = document.getElementById('progressBar');
+const hiddenInput = document.getElementById('hiddenInput');
+const sampleList = document.getElementById('sampleList');
+
+/* 初始化顯示題庫範例（右側） */
+function populateSample(){
+  sampleList.innerHTML = '';
+  for(let i=0;i<20 && i<WORDS.length;i++){
+    const w=WORDS[i];
+    const d=document.createElement('div');
+    d.style.padding='6px';
+    d.style.background='#fbfeff';
+    d.style.borderRadius='8px';
+    d.style.border='1px solid #f0f6ff';
+    d.innerHTML=`<div style="font-weight:800;color:#0b66b2">${w.c}</div><div style="font-weight:900;color:#2b8aef">${w.e}</div>`;
+    sampleList.appendChild(d);
+  }
+}
+populateSample();
+
+/* 建立字母鍵盤 */
+function createLetters(){
+  lettersPanel.innerHTML='';
+  const A='A'.charCodeAt(0);
+  for(let i=0;i<26;i++){
+    const ch=String.fromCharCode(A+i);
+    const btn=document.createElement('div');
+    btn.className='letterBtn';
+    btn.textContent=ch;
+    btn.dataset.letter=ch.toLowerCase();
+    btn.addEventListener('click',()=>onLetter(ch.toLowerCase()));
+    lettersPanel.appendChild(btn);
+  }
+}
+createLetters();
+
+/* 取得隨機未用題目 index（如果都用完就重置） */
+function pickIndex(){
+  if(usedIndices.size >= WORDS.length){ usedIndices.clear(); }
+  let idx;
+  do{
+    idx = Math.floor(Math.random()*WORDS.length);
+  }while(usedIndices.has(idx));
+  usedIndices.add(idx);
+  return idx;
+}
+
+/* 更穩健的 emoji 選取：精準比對 -> 子字串比對 -> default */
+function findEmojiFor(word){
+  if(!word) return '🧸';
+  word = word.toLowerCase();
+  if(emojiMap[word]) return emojiMap[word];
+  // substring match: try keys that are substring of word
+  for(const k of Object.keys(emojiMap)){
+    if(word.includes(k)) return emojiMap[k];
+  }
+  // reverse: if key contains word
+  for(const k of Object.keys(emojiMap)){
+    if(k.includes(word)) return emojiMap[k];
+  }
+  return '🧸';
+}
+
+/* 顯示下一題（注意：只有按下一題才會呼叫） */
+function showNext(){
+  // reset UI
+  feedback.textContent = '';
+  feedback.className = 'feedback';
+  btnNext.classList.add('disabled'); btnNext.disabled=true;
+  btnSubmit.disabled=false; btnSubmit.classList.remove('disabled');
+  // pick
+  currentIndex = pickIndex();
+  const word = WORDS[currentIndex].e;
+  chineseWord.textContent = WORDS[currentIndex].c;
+  // emoji (改為穩健選取)
+  const em = findEmojiFor(word) || '🧸';
+  emojiPic.textContent = em;
+  // create slots
+  slotsArea.innerHTML='';
+  slots = [];
+  filledCount = 0;
+  for(let i=0;i<word.length;i++){
+    const s = document.createElement('div');
+    s.className='slot';
+    s.textContent = '_';
+    slotsArea.appendChild(s);
+    slots.push(s);
+  }
+  // re-enable letter buttons visually and functionally
+  enableLetterButtons(true);
+  // focus the hidden input to capture keyboard
+  setTimeout(()=>hiddenInput.focus(),50);
+  updateProgress();
+}
+
+/* 啟用/停用字母按鈕（true: enable, false: disable） */
+function enableLetterButtons(enable){
+  const btns = lettersPanel.querySelectorAll('.letterBtn');
+  btns.forEach(b=>{
+    if(enable){
+      b.classList.remove('disabled');
+      b.style.pointerEvents = 'auto';
+    } else {
+      b.classList.add('disabled');
+      b.style.pointerEvents = 'none';
+    }
+  });
+}
+
+/* 處理按字母（自動填左到右） */
+function onLetter(letter){
+  if(currentIndex === null) return;
+  const word = WORDS[currentIndex].e;
+  if(filledCount >= word.length) return; // 已滿，禁止輸入
+  // 把字放入下一個空格
+  slots[filledCount].textContent = letter;
+  filledCount++;
+  if(filledCount >= word.length){
+    // 當滿了後視覺上停用字母（並阻止輸入）
+    
+  }
+}
+
+/* 刪除最後一個字母 */
+function deleteLast(){
+  if(currentIndex === null) return;
+  if(filledCount <= 0) return;
+  filledCount--;
+  slots[filledCount].textContent = '_';
+  // 如果之前被停用，按刪除後重新啟用按鈕
+  enableLetterButtons(true);
+}
+
+/* 監聽清除鍵 */
+btnClear.addEventListener('click', ()=>{
+  deleteLast();
+  hiddenInput.focus();
+});
+
+/* 提交檢查答案 */
+function submitAnswer(){
+  if(currentIndex === null) return;
+  const target = WORDS[currentIndex].e.toLowerCase();
+  // collect typed from slots
+  let typed = '';
+  for(let i=0;i<slots.length;i++){
+    const ch = slots[i].textContent;
+    typed += (ch === '_' ? '' : ch);
+  }
+  // if nothing typed, do nothing
+  if(typed.length===0){
+    feedback.textContent = '尚未輸入任何字母！請輸入後再提交';
+    feedback.className='feedback incorrect';
+    playWrong();
+    return;
+  }
+  // compare
+  if(typed.toLowerCase() === target.toLowerCase()){
+    feedback.textContent = '答對了！太棒了！';
+    feedback.className = 'feedback correct';
+    playCorrect();
+    score++; scoreElUpdate();
+  } else {
+    feedback.textContent = `答錯了！正確答案： ${target}`;
+    feedback.className = 'feedback incorrect';
+    playWrong();
+  }
+  answered++;
+  answeredEl.textContent = String(answered);
+  // after submission, allow Next
+  btnNext.classList.remove('disabled'); btnNext.disabled=false;
+  // disable submit to prevent double submit
+  btnSubmit.disabled=true;
+  // lock further typing
+  
+  updateProgress();
+}
+
+/* 更新分數顯示 */
+function scoreElUpdate(){
+  document.getElementById('score').textContent = String(score);
+}
+
+/* update progress bar: percent of usedIndices/WORDS length */
+function updateProgress(){
+  const pct = Math.round((usedIndices.size / WORDS.length) * 100);
+  progressBar.style.width = pct + '%';
+}
+
+/* NEXT 按鈕 */
+btnNext.addEventListener('click', ()=>{
+  if(btnNext.classList.contains('disabled')) return;
+  showNext();
+});
+
+/* SUBMIT 按鈕 */
+btnSubmit.addEventListener('click', submitAnswer);
+
+/* 鍵盤支援：A-Z -> 填字；Backspace -> 刪除 */
+hiddenInput.addEventListener('keydown', (e)=>{
+  const k = e.key;
+  if(/^[a-zA-Z]$/.test(k)){
+    onLetter(k.toLowerCase());
+    e.preventDefault();
+  } else if(k === 'Backspace'){
+    deleteLast();
+    e.preventDefault();
+  } else if(k === 'Enter'){
+    // submit
+    submitAnswer();
+    e.preventDefault();
+  }
+});
+
+/* 當頁面點擊任何地方時聚焦 hiddenInput，方便鍵盤輸入 */
+document.addEventListener('mousedown',()=>{ setTimeout(()=>hiddenInput.focus(),0); });
+
+/* 自動把 hiddenInput focus（讓鍵盤可以直接用） */
+setTimeout(()=>hiddenInput.focus(),200);
+
+/* ===== 音效：使用 WebAudio API 即時合成（改成你要的兩種音效） ===== */
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+const audioCtx = AudioCtx ? new AudioCtx() : null;
+
+/* 正確：清亮「叮咚」上升音（短） */
+function playCorrect() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+
+  // ======== 用 FM 合成金屬感 ========
+  function fmBell(freq, startTime) {
+    let carrier = audioCtx.createOscillator();
+    let mod = audioCtx.createOscillator();
+    let modGain = audioCtx.createGain();
+    let gain = audioCtx.createGain();
+
+    // 金屬感
+    mod.frequency.value = freq * 2.5;
+    modGain.gain.value = freq * 0.6;
+    mod.connect(modGain).connect(carrier.frequency);
+
+    carrier.frequency.value = freq;
+    carrier.type = "sine";
+
+    // 音量包絡（短促與亮）
+    gain.gain.setValueAtTime(0.7, startTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.25);
+
+    carrier.connect(gain).connect(audioCtx.destination);
+    mod.start(startTime);
+    carrier.start(startTime);
+    carrier.stop(startTime + 0.26);
+    mod.stop(startTime + 0.26);
+  }
+
+  // ======== 加入 opening click (attack transient) ========
+  function addClick(time) {
+    let noise = audioCtx.createBufferSource();
+    let buffer = audioCtx.createBuffer(1, 44100 * 0.02, 44100);
+    let data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+      data[i] = (Math.random() * 2 - 1) * (1 - i/data.length); 
+    }
+    noise.buffer = buffer;
+
+    let g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.4, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + 0.02);
+
+    noise.connect(g).connect(audioCtx.destination);
+    noise.start(time);
+    noise.stop(time + 0.02);
+  }
+
+  // ======== 加一點非常短的 delay（類似空氣感） ========
+  let delay = audioCtx.createDelay();
+  delay.delayTime.value = 0.015; // 15ms
+
+  let feedback = audioCtx.createGain();
+  feedback.gain.value = 0.25;
+
+  delay.connect(feedback).connect(delay);
+
+  // 把 delay 混合進主輸出
+  let mix = audioCtx.createGain();
+  mix.gain.value = 0.2;
+  delay.connect(mix).connect(audioCtx.destination);
+
+  // ======== 正式兩聲音效 ========
+
+  // 第一聲（叮）- 高亮
+  addClick(t);
+  fmBell(1250, t);
+
+  // 第二聲（咚）- 更亮更高
+  addClick(t + 0.11);
+  fmBell(1700, t + 0.11);
+}
+
+/* 錯誤：低沉「鄧鄧」兩短音（deng-deng） */
+function playWrong() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+
+  // ====== 創造輕微失真（像影片的電子錯誤音） ======
+  function makeDistortion(amount) {
+    let n = 44100,
+        curve = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      let x = i * 2 / n - 1;
+      curve[i] = (3 + amount) * x * 20 * Math.PI / (Math.PI + amount * Math.abs(x));
+    }
+    let ws = audioCtx.createWaveShaper();
+    ws.curve = curve;
+    ws.oversample = "4x";
+    return ws;
+  }
+
+  let distortion = makeDistortion(10);
+
+  function lowBeep(freq, start) {
+    let o = audioCtx.createOscillator();
+    let g = audioCtx.createGain();
+
+    o.type = "square";
+    o.frequency.setValueAtTime(freq, start);
+    o.frequency.exponentialRampToValueAtTime(freq * 0.7, start + 0.12);
+
+    g.gain.setValueAtTime(0.6, start);
+    g.gain.exponentialRampToValueAtTime(0.0001, start + 0.16);
+
+    o.connect(distortion).connect(g).connect(audioCtx.destination);
+    o.start(start);
+    o.stop(start + 0.17);
+  }
+
+  // 第一聲 鄧（較高）
+  lowBeep(200, t);
+
+  // 第二聲 鄧（更低 + 更明顯）
+  lowBeep(140, t + 0.18);
+}
+
+/* 初次載入提示：顯示少量範例並 enable Next */
+feedback.textContent = '按下一題開始練習！';
+feedback.className = 'feedback';
+btnNext.classList.remove('disabled'); btnNext.disabled=false;
+
+/* 快捷鍵 S 下一題、R 重置 */
+document.addEventListener('keydown',(e)=>{
+  if(e.key.toLowerCase() === 's'){ if(!btnNext.classList.contains('disabled')) btnNext.click(); }
+  if(e.key.toLowerCase() === 'r'){
+    usedIndices.clear(); currentIndex=null; score=0; answered=0;
+    scoreElUpdate(); answeredEl.textContent='0'; progressBar.style.width='0%';
+    feedback.textContent='已重置，按下一題開始'; feedback.className='feedback';
+    btnNext.classList.remove('disabled'); btnNext.disabled=false;
+  }
+});
+</script>
+</body>
+</html>
         padding: 15px;
         font-size: 1.2rem;
         border: none;
@@ -196,3 +701,4 @@ createLetters();
 
 </body>
 </html>
+
