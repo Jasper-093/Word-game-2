@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小學生英文拼字練習</title>
+
+<style>
+    body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: #f0f7ff;
+        margin: 0;
+        padding: 20px;
+    }
+
+    .container {
+        max-width: 800px;
+        margin: auto;
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+        text-align: center;
+        color: #1c7ed6;
+        margin-bottom: 10px;
+    }
+
+    .word-box {
+        background: #e7f5ff;
+        border: 3px solid #a5d8ff;
+        padding: 20px;
+        border-radius: 15px;
+        text-align: center;
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 20px;
+        color: #1864ab;
+    }
+
+    input.answer {
+        width: 100%;
+        padding: 15px;
+        font-size: 1.6rem;
+        border: 3px solid #4dabf7;
+        border-radius: 10px;
+        text-align: center;
+        background: #f0f9ff;
+        color: #1864ab;
+        font-weight: bold;
+    }
+
+    .buttons {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+    }
+
+    button {
+        flex: 1;
+        padding: 15px;
+        font-size: 1.2rem;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: bold;
+        color: white;
+    }
+
+    .btn-submit { background: #339af0; }
+    .btn-next { background: #51cf66; }
+
+    .feedback {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 12px;
+        font-size: 1.5rem;
+        text-align: center;
+        font-weight: bold;
+    }
+
+    .correct { background: #d3f9d8; color: #2b8a3e; }
+    .incorrect { background: #ffe3e3; color: #c92a2a; }
+
+    .letters {
+        margin-top: 20px;
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 8px;
+    }
+
+    .letter-btn {
+        padding: 10px;
+        background: #4dabf7;
+        color: white;
+        border-radius: 8px;
+        text-align: center;
+        font-size: 1.3rem;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    .letter-btn:active {
+        transform: scale(0.95);
+    }
+</style>
+</head>
+
+<body>
+<div class="container">
+    <h1>英文拼字練習（小學生版）</h1>
+
+    <div class="word-box" id="chineseWord">按下一題開始</div>
+
+    <input type="text" class="answer" id="inputAnswer" placeholder="請輸入英文…" autocomplete="off">
+
+    <div class="letters" id="letterButtons"></div>
+
+    <div class="buttons">
+        <button class="btn-submit" id="submitBtn">提交答案</button>
+        <button class="btn-next" id="nextBtn">下一題</button>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+</div>
+
+<script>
+const WORDS = [
+    {c:"蘋果", e:"apple"},
+    {c:"香蕉", e:"banana"},
+    {c:"貓", e:"cat"},
+    {c:"狗", e:"dog"},
+    {c:"書", e:"book"},
+    {c:"椅子", e:"chair"},
+    {c:"桌子", e:"table"},
+    {c:"魚", e:"fish"},
+    {c:"老師", e:"teacher"},
+    {c:"學生", e:"student"}
+];
+
+let current = null;
+
+// 生成字母按鈕
+function createLetters() {
+    const panel = document.getElementById("letterButtons");
+    panel.innerHTML = "";
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    for(let ch of letters){
+        const btn = document.createElement("div");
+        btn.textContent = ch;
+        btn.className = "letter-btn";
+        btn.onclick = () => {
+            document.getElementById("inputAnswer").value += ch.toLowerCase();
+        };
+        panel.appendChild(btn);
+    }
+}
+
+// 隨機出題
+function nextQuestion() {
+    const rand = Math.floor(Math.random() * WORDS.length);
+    current = WORDS[rand];
+
+    document.getElementById("chineseWord").textContent = current.c;
+    document.getElementById("feedback").textContent = "";
+    document.getElementById("feedback").className = "feedback";
+    document.getElementById("inputAnswer").value = "";
+    document.getElementById("inputAnswer").focus();
+}
+
+// 檢查答案
+function checkAnswer() {
+    if (!current) return;
+
+    const typed = document.getElementById("inputAnswer").value.trim().toLowerCase();
+    const correct = current.e.toLowerCase();
+    const fb = document.getElementById("feedback");
+
+    if (typed === correct) {
+        fb.textContent = "答對了！太棒了！";
+        fb.className = "feedback correct";
+    } else {
+        fb.textContent = `答錯了喔！正確答案是：${correct}`;
+        fb.className = "feedback incorrect";
+    }
+}
+
+document.getElementById("submitBtn").onclick = checkAnswer;
+document.getElementById("nextBtn").onclick = nextQuestion;
+
+createLetters();
+</script>
+
+</body>
+</html>
